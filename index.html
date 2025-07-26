@@ -621,11 +621,23 @@
                 toggleMobileMenu(!isOpen);
             });
 
+            // *** CORRECCIÓN DE NAVEGACIÓN MÓVIL ***
             mobileMenuLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
+                    const targetId = e.currentTarget.dataset.target;
+
+                    // Salir si ya hay una navegación en curso o no hay un objetivo válido
+                    if (isNavigating || !targetId) {
+                        return;
+                    }
+                    
+                    // Iniciar el cierre del menú
                     toggleMobileMenu(false);
-                    setTimeout(() => switchSection(e.currentTarget.dataset.target), 500);
+
+                    // Iniciar el cambio de sección inmediatamente
+                    // La animación de la cámara y el cierre del menú ocurrirán en paralelo
+                    switchSection(targetId);
                 });
             });
 
@@ -683,7 +695,7 @@
             });
             
             const langSwitcher = document.getElementById('lang-switcher');
-            // FIX: Removed duplicate declaration of currentLang. It's already declared at the top of the DOMContentLoaded scope.
+            
             function translatePage(lang) {
                 document.querySelectorAll('[data-lang-key]').forEach(el => {
                     const key = el.dataset.langKey;
@@ -716,3 +728,4 @@
     </script>
 </body>
 </html>
+
