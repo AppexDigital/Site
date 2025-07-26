@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APPEX Arquitecto Digital - Edifico tu Futuro Digital</title>
+    
+    <!-- Dependencias -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    
+    <!-- Fuentes de Marca -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800&family=Inter:wght@300;400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --c-dark-green: #0A3832; --c-lime-green: #B5CC6A; --c-red: #C40F3A;
+            --c-off-white: #F1EEEB; --c-black: #050505; --bg-dark: var(--c-black);
+            --text-light: var(--c-off-white); --accent-primary: var(--c-lime-green);
+            --accent-secondary: var(--c-dark-green);
+            --accent-action: var(--c-red); --border-color: rgba(181, 204, 106, 0.2);
+        }
+
+        html, body {
+            font-family: 'Inter', sans-serif; background-color: var(--bg-dark);
+            color: var(--text-light); overflow-x: hidden; cursor: auto;
+        }
+        h1, h2, h3, h4, .font-display { font-family: 'Playfair Display', serif; font-weight: 800; }
+        .font-mono { font-family: 'Roboto Mono', monospace; }
+
+        .text-shadow {
+            text-shadow: 0px 2px 5px rgba(0, 0, 0, 0.8), 0px 4px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        #preloader {
+            position: fixed; inset: 0; z-index: 1000;
+            background-color: var(--bg-dark);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.7s ease;
+        }
+        #preloader.loaded {
+            opacity: 0; pointer-events: none;
+        }
+        .loader-logo {
+            font-family: 'Roboto Mono', monospace; font-size: 2rem;
+            font-weight: bold; color: var(--text-light);
+        }
+        .loader-bar {
+            width: 150px; height: 2px; background-color: rgba(181, 204, 106, 0.2);
+            margin-top: 1rem; position: relative; overflow: hidden;
+        }
+        .loader-bar::after {
+            content: ''; position: absolute; top: 0; left: 0;
+            height: 100%; width: 50px; background-color: var(--accent-primary);
+            animation: loading-anim 1.5s infinite;
+        }
+        @keyframes loading-anim {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(300%); }
+        }
+
+        #webgl-canvas {
+            position: fixed; top: 0; left: 0; outline: none; z-index: 1;
+            cursor: grab;
+        }
+        #webgl-canvas:active { cursor: grabbing; }
+
+        .content-section {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; transition: opacity 0.5s ease, visibility 0.5s;
+            z-index: 10; padding: 7rem 1rem 2rem 1rem;
+            pointer-events: none;
+        }
+        
+        .content-wrapper {
+            pointer-events: auto; max-height: 100%; overflow-y: auto; padding: 1rem;
+            scrollbar-width: none; 
+        }
+        .content-wrapper::-webkit-scrollbar { display: none; }
+
+        #hero { align-items: flex-end; padding-bottom: 5rem; }
+        
+        .content-section.visible { opacity: 1; visibility: visible; }
+        
+        header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            transition: background-color 0.3s ease;
+        }
+        header.glass-effect {
+            background-color: rgba(5, 5, 5, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title::after {
+            content: ''; position: absolute; bottom: -12px; left: 50%;
+            transform: translateX(-50%); width: 80px; height: 4px;
+            background-color: var(--accent-primary); border-radius: 2px;
+        }
+
+        .portfolio-card {
+            position: relative; aspect-ratio: 4 / 5; border-radius: 0.5rem;
+            overflow: hidden; cursor: pointer; border: 1px solid var(--border-color);
+        }
+        .portfolio-card-bg {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .portfolio-card:hover .portfolio-card-bg { transform: scale(1.05); }
+        .portfolio-card-title-container {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 20%, transparent);
+            display: flex; align-items: flex-end; padding: 1rem;
+            transition: opacity 0.5s ease;
+        }
+        .portfolio-card-details {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px); padding: 1.5rem;
+            display: flex; flex-direction: column; justify-content: space-between;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .portfolio-card.details-visible .portfolio-card-title-container { opacity: 0; }
+        .portfolio-card.details-visible .portfolio-card-details { opacity: 1; visibility: visible; }
+        
+        .details-close-btn {
+            position: absolute; top: 0.75rem; right: 0.75rem;
+            width: 32px; height: 32px; background: rgba(255,255,255,0.1);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            color: white; transition: background-color 0.2s, transform 0.2s;
+            z-index: 5; /* Asegura que esté por encima de otros elementos */
+        }
+        .details-close-btn:hover { background-color: var(--accent-action); transform: scale(1.1); }
+
+        .details-logo {
+            width: 60px; height: 60px; border-radius: 50%;
+            background-color: rgba(181, 204, 106, 0.1); border: 1px solid var(--border-color);
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'Roboto Mono', monospace; font-size: 1.5rem; color: var(--accent-primary);
+        }
+        .details-carousel {
+            display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 1rem;
+            margin-top: 1rem; scrollbar-width: none;
+        }
+        .details-carousel::-webkit-scrollbar { display: none; }
+        .details-carousel-item {
+            flex-shrink: 0; width: 180px; height: 120px;
+            border-radius: 0.25rem; object-fit: cover;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(181, 204, 106, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(181, 204, 106, 0.8); }
+        }
+        .highlight-deal { animation: pulse-glow 3s infinite ease-in-out; }
+        .deal-banner {
+            position: absolute; top: 0; right: 0; width: 150px; height: 150px; overflow: hidden;
+        }
+        .deal-banner::before {
+            content: attr(data-text);
+            position: absolute; top: 35px; right: -35px; transform: rotate(45deg);
+            background-color: var(--accent-action); color: white; padding: 8px 40px;
+            font-weight: bold; font-size: 1rem; text-align: center; width: 200px;
+        }
+        
+        #mobile-menu {
+            position: fixed; inset: 0; z-index: 40;
+            background-color: rgba(5, 5, 5, 0.8); backdrop-filter: blur(15px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transform: translateY(-100%);
+            transition: transform 0.5s cubic-bezier(0.76, 0, 0.24, 1);
+        }
+        #mobile-menu.open { transform: translateY(0); }
+        .mobile-nav-link {
+            opacity: 0; transform: translateY(20px);
+        }
+
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="preloader">
+        <div class="loader-logo">&lt;APPEX/&gt;</div>
+        <div class="loader-bar"></div>
+    </div>
+
+    <canvas id="webgl-canvas"></canvas>
+
+    <header>
+        <div class="container mx-auto px-4 sm:px-8 py-4 flex justify-between items-center">
+            <div class="font-mono text-xl font-bold text-white cursor-pointer nav-link" data-target="hero">
+                <span class="text-accent-primary">&lt;</span>APPEX<span class="text-accent-primary">/&gt;</span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button id="lang-switcher" class="font-mono text-sm border border-border-color rounded-md px-3 py-1 text-slate-300 hover:bg-white/10 transition-colors">
+                    EN
+                </button>
+
+                <nav class="hidden md:flex items-center space-x-4 lg:space-x-6">
+                    <a href="#" data-target="quienes-somos" class="nav-link text-slate-300 hover:text-white transition-colors" data-lang-key="nav_about">Quién Soy</a>
+                    <a href="#" data-target="metodologia" class="nav-link text-slate-300 hover:text-white transition-colors" data-lang-key="nav_method">Metodología</a>
+                    <a href="#" data-target="proyectos" class="nav-link text-slate-300 hover:text-white transition-colors" data-lang-key="nav_portfolio">Portafolio</a>
+                    <a href="#" data-target="servicios" class="nav-link text-slate-300 hover:text-white transition-colors" data-lang-key="nav_services">Servicios</a>
+                    <a href="#" data-target="plan-tranquilidad" class="nav-link text-slate-300 hover:text-white transition-colors" data-lang-key="nav_plan">Plan de Tranquilidad</a>
+                    <a href="#" data-target="contacto" class="nav-link text-slate-300 hover:text-white transition-colors" data-lang-key="nav_contact">Contactar</a>
+                </nav>
+
+                <div class="md:hidden z-50">
+                    <button id="mobile-menu-toggle" class="text-white" aria-label="Toggle Menu">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="menu-icon-open"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                        <svg class="w-8 h-8 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="menu-icon-close"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id="mobile-menu">
+        <a href="#" data-target="quienes-somos" class="mobile-nav-link text-3xl font-display py-4" data-lang-key="nav_about">Quién Soy</a>
+        <a href="#" data-target="metodologia" class="mobile-nav-link text-3xl font-display py-4" data-lang-key="nav_method">Metodología</a>
+        <a href="#" data-target="proyectos" class="mobile-nav-link text-3xl font-display py-4" data-lang-key="nav_portfolio">Portafolio</a>
+        <a href="#" data-target="servicios" class="mobile-nav-link text-3xl font-display py-4" data-lang-key="nav_services">Servicios</a>
+        <a href="#" data-target="plan-tranquilidad" class="mobile-nav-link text-3xl font-display py-4" data-lang-key="nav_plan">Plan de Tranquilidad</a>
+        <a href="#" data-target="contacto" class="mobile-nav-link text-3xl font-display py-4" data-lang-key="nav_contact">Contactar</a>
+    </div>
+    
+    <div id="content-container">
+        <!-- El contenido de las secciones (hero, quienes-somos, etc.) no cambia -->
+        <div id="hero" class="content-section visible">
+            <div class="content-wrapper text-center text-white max-w-4xl w-full">
+                <h1 class="text-4xl md:text-5xl font-display leading-tight text-shadow" data-lang-key="hero_title">Edifico tu <span class="text-accent-primary">Futuro Digital</span></h1>
+                <p class="text-slate-300 mt-4 max-w-xl mx-auto text-shadow" data-lang-key="hero_subtitle">Más que un desarrollador, un arquitecto. Construyo los cimientos de tu éxito en el universo digital.</p>
+            </div>
+        </div>
+
+        <div id="quienes-somos" class="content-section">
+            <div class="content-wrapper max-w-3xl w-full text-center">
+                <h2 class="section-title relative text-4xl md:text-5xl font-display mb-12 text-shadow" data-lang-key="about_title">El <span class="text-accent-primary">Arquitecto</span> Digital</h2>
+                <div class="text-lg text-slate-300 space-y-6 text-left leading-relaxed text-shadow">
+                    <p data-lang-key="about_p1">Mi nombre es Luis. APPEX no es una corporación sin rostro; es el estandarte de mi filosofía personal. Como Arquitecto Digital, mi único propósito es llevar tu proyecto a su <span class="font-bold text-accent-primary">Appex</span>: el punto más alto de su potencial.</p>
+                    <p data-lang-key="about_p2">No entrego simples páginas web; construyo motores de crecimiento. Mi trabajo es traducir tu visión de negocio en una estructura digital sólida que atraiga, convenza y convierta. Analizo tu mercado, entiendo a tu cliente y edifico una presencia online que no solo se ve increíble, sino que funciona como una herramienta de ventas 24/7, dándote la visibilidad y la autoridad que necesitas para dominar tu sector.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="metodologia" class="content-section">
+             <div class="content-wrapper max-w-4xl w-full">
+                <h2 class="section-title relative text-4xl md:text-5xl font-display mb-20 text-center text-shadow" data-lang-key="method_title">Mi Arquitectura de <span class="text-accent-primary">Trabajo</span></h2>
+                <div class="space-y-8 text-shadow">
+                    <div class="border-l-4 border-accent-primary pl-6">
+                        <h3 class="text-2xl font-display mb-2" data-lang-key="method_s1_title">01. Cimentación: Diagnóstico Estratégico</h3>
+                        <p class="text-slate-400 font-light" data-lang-key="method_s1_text">Todo gran edificio necesita cimientos sólidos. Aquí, excavo profundo para entender el terreno de tu negocio, tus metas y los obstáculos. Es una inmersión total para definir la estructura fundamental de tu éxito, identificando oportunidades clave y riesgos potenciales antes de escribir una sola línea de código.</p>
+                    </div>
+                     <div class="border-l-4 border-accent-primary pl-6">
+                        <h3 class="text-2xl font-display mb-2" data-lang-key="method_s2_title">02. Planos Maestros: Diseño y Experiencia</h3>
+                        <p class="text-slate-400 font-light" data-lang-key="method_s2_text">Con los cimientos definidos, diseño los planos. No se trata solo de estética, sino de la arquitectura de la persuasión. Cada elemento, cada flujo de usuario, está diseñado para guiar a tus visitantes de forma intuitiva hacia la conversión, creando una experiencia memorable y efectiva.</p>
+                    </div>
+                     <div class="border-l-4 border-accent-primary pl-6">
+                        <h3 class="text-2xl font-display mb-2" data-lang-key="method_s3_title">03. Edificación Digital: Construcción y Código</h3>
+                        <p class="text-slate-400 font-light" data-lang-key="method_s3_text">Los planos cobran vida. Con la precisión de un artesano, edifico tu estructura digital. Utilizo tecnologías de vanguardia para garantizar que tu proyecto no solo sea visualmente impresionante, sino también rápido, seguro, escalable y construido para el futuro.</p>
+                    </div>
+                     <div class="border-l-4 border-accent-primary pl-6">
+                        <h3 class="text-2xl font-display mb-2" data-lang-key="method_s4_title">04. Puesta en Marcha: Lanzamiento y Optimización</h3>
+                        <p class="text-slate-400 font-light" data-lang-key="method_s4_text">El lanzamiento es solo el comienzo. Monitoreo el rendimiento, analizo los datos y te acompaño para asegurar que tu inversión no solo se mantenga, sino que siga evolucionando, adaptándose y generando valor continuo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="proyectos" class="content-section">
+             <div class="content-wrapper w-full text-center max-w-6xl">
+                <h2 class="section-title relative text-4xl md:text-5xl font-display mb-12 text-shadow" data-lang-key="portfolio_title">Portafolio de <span class="text-accent-primary">Proyectos</span></h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="portfolio-grid">
+                </div>
+            </div>
+        </div>
+
+        <div id="servicios" class="content-section">
+             <div class="content-wrapper w-full max-w-6xl text-center">
+                <h2 class="section-title relative text-4xl md:text-5xl font-display mb-20 text-shadow" data-lang-key="services_title">Mis Planes de <span class="text-accent-primary">Servicio</span></h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                    <div class="relative border border-accent-primary p-6 rounded-lg bg-accent-secondary transform md:scale-105 highlight-deal overflow-hidden">
+                         <div class="deal-banner" data-text="OFERTA" data-lang-key="offer_badge"></div>
+                        <h3 class="text-xl font-display text-accent-primary text-shadow" data-lang-key="services_p1_title">Paquete Esencial</h3>
+                        <p class="text-3xl font-mono font-bold my-2 text-shadow">$250 <span class="text-lg text-slate-400 line-through">$400</span></p>
+                        <p class="text-slate-300 font-light mt-4 text-shadow text-sm" data-lang-key="services_p1_desc">La solución perfecta para emprendedores y profesionales que necesitan lanzar una presencia digital de alto impacto, rápido.</p>
+                        <ul class="text-slate-300 font-light space-y-2 mt-4 text-shadow text-sm">
+                            <li data-lang-key="services_p1_f1">✓ Página Única (One-Page) profesional</li>
+                            <li data-lang-key="services_p1_f2">✓ Diseño enfocado en conversión</li>
+                            <li data-lang-key="services_p1_f3">✓ Formulario de Contacto y WhatsApp</li>
+                            <li class="text-accent-primary font-bold" data-lang-key="services_p1_f4">✓ REGALO: Página de Redes Sociales con QR</li>
+                        </ul>
+                    </div>
+                    <div class="border border-border-color p-6 rounded-lg bg-black/20">
+                        <h3 class="text-xl font-display text-accent-primary text-shadow" data-lang-key="services_p2_title">Paquete Profesional</h3>
+                        <p class="text-3xl font-mono font-bold my-2 text-shadow">$700</p>
+                        <p class="text-slate-300 font-light mt-4 text-shadow text-sm" data-lang-key="services_p2_desc">La estructura completa para negocios que buscan consolidar su territorio y establecerse como autoridad.</p>
+                        <ul class="text-slate-300 font-light space-y-2 mt-4 text-shadow text-sm">
+                            <li data-lang-key="services_p2_f1">✓ Sitio web de hasta 5 secciones</li>
+                            <li data-lang-key="services_p2_f2">✓ Arquitectura de contenido estratégica</li>
+                            <li data-lang-key="services_p2_f3">✓ Blog para marketing de contenidos</li>
+                            <li data-lang-key="services_p2_f4">✓ Optimización SEO fundamental</li>
+                        </ul>
+                    </div>
+                    <div class="border border-border-color p-6 rounded-lg bg-black/20">
+                        <h3 class="text-xl font-display text-accent-primary text-shadow" data-lang-key="services_p3_title">Paquete Empresarial</h3>
+                        <p class="text-3xl font-mono font-bold my-2 text-shadow">$1,200+</p>
+                        <p class="text-slate-300 font-light mt-4 text-shadow text-sm" data-lang-key="services_p3_desc">Para visiones audaces que requieren herramientas a la medida, e-commerce o funcionalidades complejas.</p>
+                        <ul class="text-slate-300 font-light space-y-2 mt-4 text-shadow text-sm">
+                            <li data-lang-key="services_p3_f1">✓ Todo del Paquete Profesional</li>
+                            <li data-lang-key="services_p3_f2">✓ Tienda online e integraciones de pago</li>
+                            <li data-lang-key="services_p3_f3">✓ Sistemas de reservas o calculadoras</li>
+                            <li data-lang-key="services_p3_f4">✓ Cualquier funcionalidad a medida</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="plan-tranquilidad" class="content-section">
+            <div class="content-wrapper max-w-3xl w-full text-center">
+                <h2 class="section-title relative text-4xl md:text-5xl font-display mb-12 text-shadow" data-lang-key="plan_title">Mi Plan de <span class="text-accent-primary">Tranquilidad</span></h2>
+                <div class="text-lg text-slate-300 space-y-6 text-left leading-relaxed bg-black/20 p-8 rounded-lg border border-border-color text-shadow">
+                    <p data-lang-key="plan_p1">Lanzar tu proyecto es solo el primer paso. Asegurar su valor a largo plazo requiere vigilancia. Mi <span class="font-bold text-accent-primary">Plan de Tranquilidad</span> es el equipo de mantenimiento de élite para tu fortaleza digital, asegurando que tu inversión no solo perdure, sino que prospere.</p>
+                    <ul class="list-disc list-inside space-y-4 mt-6">
+                        <li data-lang-key="plan_f1"><strong class="text-white">Cimientos Inquebrantables:</strong> Tu web residirá en un hosting de alta velocidad con certificado SSL. Traducido: será rápida, segura y amada por Google y tus clientes.</li>
+                        <li data-lang-key="plan_f2"><strong class="text-white">Vigilancia Perimetral 24/7:</strong> Mi sistema monitorea tu sitio día y noche. Cualquier amenaza o intento de intrusión es detectado y neutralizado antes de que se convierta en un problema.</li>
+                        <li data-lang-key="plan_f3"><strong class="text-white">Refuerzos Estructurales Constantes:</strong> La tecnología avanza. Yo me encargo de que tu sitio esté siempre al día con las últimas actualizaciones de seguridad y rendimiento, sellando cualquier posible grieta.</li>
+                        <li data-lang-key="plan_f4"><strong class="text-white">Bóveda de Planos de Respaldo:</strong> Realizo copias de seguridad automáticas de toda tu estructura. Si ocurre lo impensable, puedo reconstruir tu presencia digital a su estado perfecto en tiempo récord.</li>
+                        <li data-lang-key="plan_f5"><strong class="text-white">Línea Directa con el Arquitecto:</strong> Tienes acceso prioritario a mí para consultas y ajustes menores. Sin tickets, sin esperas. Hablas directamente con quien construyó tu proyecto.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="contacto" class="content-section">
+            <div class="content-wrapper text-center max-w-4xl w-full">
+                <h2 class="text-4xl md:text-5xl font-display mb-6 text-white text-shadow" data-lang-key="contact_title">Contacta al <span class="text-accent-primary">Arquitecto</span></h2>
+                <p class="text-lg text-slate-300 mb-12 text-shadow" data-lang-key="contact_subtitle">Tu visión merece una estructura sólida. Comencemos a diseñar la arquitectura de tu éxito.</p>
+                <div class="flex justify-center items-center gap-4 flex-wrap">
+                    <a href="https://wa.me/50670866080" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.433-9.89-9.889-9.89-5.452 0-9.887 4.434-9.889 9.888.001 2.228.651 4.39 1.899 6.27l-1.232 4.495 4.61-1.212z"/></svg></a>
+                    <a href="mailto:appex@gmail.com" aria-label="Contactar por Email" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
+                    <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Ver perfil de Instagram" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.585-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.585-.012-4.85-.07c-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.85s.012-3.584.07-4.85c.149-3.227 1.664-4.771 4.919-4.919C8.415 2.175 8.796 2.163 12 2.163m0-2.163C8.74 0 8.333.011 7.053.069 2.59.284 0 2.59 0 7.053c-.058 1.281-.069 1.688-.069 4.947s.011 3.666.069 4.947c.216 4.462 2.523 6.78 7.053 6.994 1.28.058 1.688.069 4.947.069s3.667-.011 4.947-.069c4.532-.213 6.84-2.533 7.054-6.994.058-1.281.069-1.688.069-4.947s-.011-3.666-.069-4.947C21.409 2.59 19.093.284 14.947.069 13.667.011 13.26 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.88 1.44 1.44 0 000-2.88z"/></svg></a>
+                    <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Ver perfil de Facebook" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M22.675 0h-21.35C.59 0 0 .59 0 1.325v21.351C0 23.41.59 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.735 0 1.325-.59 1.325-1.325V1.325C24 .59 23.41 0 22.675 0z"/></svg></a>
+                    <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Ver perfil de Github" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12z"/></svg></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+          }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        // Módulo de traducción (sin cambios)
+        const translations = {
+            es: {
+                nav_about: 'Quién Soy', nav_method: 'Metodología', nav_portfolio: 'Portafolio', nav_services: 'Servicios', nav_plan: 'Plan de Tranquilidad', nav_contact: 'Contactar',
+                hero_title: 'Edifico tu <span class="text-accent-primary">Futuro Digital</span>', hero_subtitle: 'Más que un desarrollador, un arquitecto. Construyo los cimientos de tu éxito en el universo digital.',
+                about_title: 'El <span class="text-accent-primary">Arquitecto</span> Digital',
+                about_p1: 'Mi nombre es Luis. APPEX no es una corporación sin rostro; es el estandarte de mi filosofía personal. Como Arquitecto Digital, mi único propósito es llevar tu proyecto a su <span class="font-bold text-accent-primary">Appex</span>: el punto más alto de su potencial.',
+                about_p2: 'No entrego simples páginas web; construyo motores de crecimiento. Mi trabajo es traducir tu visión de negocio en una estructura digital sólida que atraiga, convenza y convierta. Analizo tu mercado, entiendo a tu cliente y edifico una presencia online que no solo se ve increíble, sino que funciona como una herramienta de ventas 24/7, dándote la visibilidad y la autoridad que necesitas para dominar tu sector.',
+                offer_badge: 'OFERTA',
+            },
+            en: {
+                nav_about: 'About Me', nav_method: 'Methodology', nav_portfolio: 'Portfolio', nav_services: 'Services', nav_plan: 'Peace of Mind Plan', nav_contact: 'Contact',
+                hero_title: 'Building Your <span class="text-accent-primary">Digital Future</span>', hero_subtitle: 'More than a developer, an architect. I build the foundations for your success in the digital universe.',
+                about_title: 'The Digital <span class="text-accent-primary">Architect</span>',
+                about_p1: "My name is Luis. APPEX is not a faceless corporation; it's the banner of my personal philosophy. As a Digital Architect, my sole purpose is to take your project to its <span class='font-bold text-accent-primary'>Apex</span>: the highest point of its potential.",
+                about_p2: "I don't deliver simple web pages; I build growth engines. My job is to translate your business vision into a solid digital structure that attracts, convinces, and converts. I analyze your market, understand your customer, and build an online presence that not only looks incredible but also functions as a 24/7 sales tool, giving you the visibility and authority you need to dominate your sector.",
+                offer_badge: 'OFFER',
+            }
+        };
+
+        // =============================================
+        //             MÓDULO THREE.JS (GRÁFICOS)
+        // =============================================
+        const canvas = document.getElementById('webgl-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.03;
+        controls.enablePan = false;
+        controls.minDistance = 10;
+        controls.maxDistance = 200;
+
+        const textureLoader = new THREE.TextureLoader();
+        const cubeLoader = new THREE.CubeTextureLoader();
+        const cdnUrl = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/cube/MilkyWay/';
+        scene.background = cubeLoader.load([
+            `${cdnUrl}dark-s_px.jpg`, `${cdnUrl}dark-s_nx.jpg`,
+            `${cdnUrl}dark-s_py.jpg`, `${cdnUrl}dark-s_ny.jpg`,
+            `${cdnUrl}dark-s_pz.jpg`, `${cdnUrl}dark-s_nz.jpg`
+        ]);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(10, 20, 10);
+        scene.add(directionalLight);
+
+        const flare = new THREE.Sprite(new THREE.SpriteMaterial({ 
+            map: textureLoader.load('https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/lensflare/lensflare0.png'), 
+            color: 0xffffff, blending: THREE.AdditiveBlending, opacity: 0.9 
+        }));
+        flare.scale.set(80, 80, 1);
+        flare.position.set(-400, 150, -500);
+        scene.add(flare);
+
+        const stars = new THREE.Points(
+            new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(Array.from({ length: 45000 }, () => (Math.random() - 0.5) * 2000), 3)),
+            new THREE.PointsMaterial({ color: 0xffffff, size: 0.7, opacity: 0.8, transparent: true })
+        );
+        scene.add(stars);
+
+        const geoSphere = new THREE.LineSegments(
+            new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(10, 10)),
+            new THREE.LineBasicMaterial({ color: 0x00ffff, opacity: 0.3, transparent: true })
+        );
+        scene.add(geoSphere);
+        
+        const asteroidGeometry = new THREE.IcosahedronGeometry(0.4, 2);
+        const posAttr = asteroidGeometry.attributes.position;
+        for (let i = 0; i < posAttr.count; i++) {
+            const p = new THREE.Vector3().fromBufferAttribute(posAttr, i);
+            const noise = Math.sin(p.x * 5) * 0.3 + Math.cos(p.y * 4) * 0.2;
+            p.addScaledVector(p.clone().normalize(), noise * 0.5);
+            posAttr.setXYZ(i, p.x, p.y, p.z);
+        }
+        asteroidGeometry.computeVertexNormals();
+
+        const rockTexture = textureLoader.load('https://cdn.jsdelivr.net/gh/Polyhaven/rock/textures/rock_wall_diff_1k.jpg');
+        const rockNormal = textureLoader.load('https://cdn.jsdelivr.net/gh/Polyhaven/rock/textures/rock_wall_nor_gl_1k.jpg');
+        const baseColors = [ new THREE.Color('#c2b280'), new THREE.Color('#a98c50'), new THREE.Color('#8b6b3b'), new THREE.Color('#d1b17f') ];
+        const asteroidGroup = new THREE.Group();
+        const asteroidData = [];
+        const asteroidCount = 200;
+
+        for (let i = 0; i < asteroidCount; i++) {
+            const mat = new THREE.MeshStandardMaterial({
+                map: rockTexture, normalMap: rockNormal,
+                metalness: 0.25 + Math.random() * 0.15, roughness: 0.6 + Math.random() * 0.3,
+                emissive: new THREE.Color('#bbaa88'), emissiveIntensity: 0.1,
+                color: baseColors[Math.floor(Math.random() * baseColors.length)],
+            });
+            const mesh = new THREE.Mesh(asteroidGeometry, mat);
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 15 + Math.random() * 10;
+            const y = (Math.random() - 0.5) * 8;
+            mesh.position.set(Math.cos(angle) * distance, y, Math.sin(angle) * distance);
+            mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+            
+            const edges = new THREE.EdgesGeometry(asteroidGeometry);
+            const lineMaterial = new THREE.LineBasicMaterial({ color: '#d1b17f', linewidth: 1, transparent: true, opacity: 0.6 });
+            const wireframe = new THREE.LineSegments(edges, lineMaterial);
+            mesh.add(wireframe);
+            
+            asteroidGroup.add(mesh);
+            asteroidData.push({
+                velocity: new THREE.Vector3(),
+                angle: angle,
+                orbitSpeed: 0.015 + Math.random() * 0.02,
+                distance: distance
+            });
+        }
+        scene.add(asteroidGroup);
+
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        function onPointerDown(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(asteroidGroup.children, true); 
+            if (intersects.length > 0) {
+                const asteroid = intersects[0].object.parent; 
+                const index = asteroidGroup.children.indexOf(asteroid);
+                if (index !== -1) {
+                    asteroidData[index].velocity.set((Math.random() - 0.5) * 0.3, (Math.random() - 0.5) * 0.3, (Math.random() - 0.5) * 0.3);
+                }
+            }
+        }
+        renderer.domElement.addEventListener('pointerdown', onPointerDown, false);
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.6, 0.3, 0.05);
+        composer.addPass(bloom);
+        
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            const t = clock.getElapsedTime();
+            controls.update();
+            flare.material.opacity = 0.8 + Math.sin(t * 0.5) * 0.2;
+            geoSphere.rotation.y += delta * 0.05;
+            geoSphere.rotation.z += delta * 0.03;
+
+            asteroidGroup.children.forEach((asteroid, i) => {
+                const data = asteroidData[i];
+                data.angle += data.orbitSpeed * delta;
+                const y = asteroid.position.y;
+                const baseX = Math.cos(data.angle) * data.distance;
+                const baseZ = Math.sin(data.angle) * data.distance;
+                
+                data.velocity.multiplyScalar(0.95);
+                asteroid.position.x = baseX + data.velocity.x;
+                asteroid.position.y += data.velocity.y;
+                asteroid.position.z = baseZ + data.velocity.z;
+
+                asteroid.rotation.x += 0.01 + Math.sin(i) * 0.005;
+                asteroid.rotation.y += 0.01 + Math.cos(i) * 0.005;
+            });
+
+            composer.render();
+        }
+        
+        window.addEventListener('resize', () => { 
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // =============================================
+        //        MÓDULO DE NAVEGACIÓN Y UI
+        // =============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const header = document.querySelector('header');
+            let activeSection = 'hero';
+            let isNavigating = false;
+            let currentLang = 'es';
+
+            const sectionPositions = {
+                hero: { cam: { x: 0, y: 5, z: 35 }, target: { x: 0, y: 0, z: 0 } },
+                'quienes-somos': { cam: { x: -25, y: 10, z: 30 }, target: { x: -5, y: 0, z: 0 } },
+                metodologia: { cam: { x: 25, y: -5, z: 30 }, target: { x: 5, y: 0, z: 0 } },
+                proyectos: { cam: { x: 0, y: 0, z: 18 }, target: { x: 0, y: 0, z: 0 } },
+                servicios: { cam: { x: 15, y: 15, z: 45 }, target: { x: 0, y: 0, z: 0 } },
+                'plan-tranquilidad': { cam: { x: 0, y: -10, z: 25 }, target: { x: 0, y: -2, z: 0 } },
+                contacto: { cam: { x: -20, y: -15, z: 40 }, target: { x: 0, y: 0, z: 0 } },
+            };
+
+            function switchSection(targetId, onCompleteCallback = () => {}) {
+                if (isNavigating || !targetId) return;
+                isNavigating = true;
+                
+                const targetPosition = sectionPositions[targetId];
+                if (!targetPosition) { isNavigating = false; return; }
+
+                document.getElementById(activeSection)?.classList.remove('visible');
+                
+                const tl = gsap.timeline({
+                    onComplete: () => {
+                        isNavigating = false;
+                        activeSection = targetId;
+                        document.getElementById(targetId)?.classList.add('visible');
+                        onCompleteCallback();
+                    }
+                });
+
+                tl.to(camera.position, { ...targetPosition.cam, duration: 2.5, ease: 'power3.inOut' });
+                tl.to(controls.target, { ...targetPosition.target, duration: 2.5, ease: 'power3.inOut' }, "<");
+
+                header.classList.toggle('glass-effect', targetId !== 'hero');
+            }
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    switchSection(e.currentTarget.dataset.target);
+                });
+            });
+
+            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileMenuLinks = mobileMenu.querySelectorAll('.mobile-nav-link');
+            const menuIconOpen = document.getElementById('menu-icon-open');
+            const menuIconClose = document.getElementById('menu-icon-close');
+
+            function toggleMobileMenu(open) {
+                mobileMenu.classList.toggle('open', open);
+                menuIconOpen.classList.toggle('hidden', open);
+                menuIconClose.classList.toggle('hidden', !open);
+                
+                gsap.to(mobileMenuLinks, {
+                    opacity: open ? 1 : 0,
+                    y: open ? 0 : 20,
+                    stagger: 0.05,
+                    duration: 0.4,
+                    ease: 'power3.out',
+                    delay: open ? 0.3 : 0,
+                });
+            }
+
+            mobileMenuToggle.addEventListener('click', () => {
+                const isOpen = mobileMenu.classList.contains('open');
+                toggleMobileMenu(!isOpen);
+            });
+
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    toggleMobileMenu(false);
+                    setTimeout(() => switchSection(e.currentTarget.dataset.target), 500);
+                });
+            });
+
+            const portfolioGrid = document.getElementById('portfolio-grid');
+            const projects = [
+                { id: 1, name: 'Aventuras La Fortuna', desc: 'Plataforma de reservas para un tour operador, enfocada en la conversión de turistas internacionales.', url: '#', images: Array(8).fill(0).map((_,i) => `https://placehold.co/400x250/0A3832/B5CC6A?text=Imagen+${i+1}`) },
+                { id: 2, name: 'Asesor Financiero CR', desc: 'Sitio web corporativo que genera confianza y captura prospectos a través de herramientas de valor como calculadoras fiscales.', url: '#', images: Array(8).fill(0).map((_,i) => `https://placehold.co/400x250/D6CEC8/050505?text=Imagen+${i+1}`) },
+                { id: 3, name: 'Manos de Sarchí', desc: 'E-commerce y galería digital para una artesana, diseñado para contar la historia detrás de cada pieza y facilitar ventas a nivel global.', url: '#', images: Array(8).fill(0).map((_,i) => `https://placehold.co/400x250/C40F3A/F1EEEB?text=Imagen+${i+1}`) },
+            ];
+
+            function createPortfolioCard(project) {
+                const card = document.createElement('div');
+                card.className = 'portfolio-card';
+                const initials = project.name.split(' ').map(n => n[0]).join('');
+                
+                card.innerHTML = `
+                    <img src="${project.images[0]}" class="portfolio-card-bg" alt="Imagen principal del proyecto ${project.name}" onerror="this.onerror=null;this.src='https://placehold.co/400x500/050505/f1eeb?text=Error';">
+                    <div class="portfolio-card-title-container">
+                        <h3 class="text-xl font-display text-shadow">${project.name}</h3>
+                    </div>
+                    <div class="portfolio-card-details">
+                        <button class="details-close-btn" aria-label="Cerrar detalles">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                        <div class="details-logo">${initials}</div>
+                        <div>
+                            <p class="text-sm text-slate-300 text-shadow">${project.desc}</p>
+                            <div class="details-carousel">
+                                ${project.images.map(imgUrl => `<img src="${imgUrl}" class="details-carousel-item" alt="Imagen de galería para ${project.name}" onerror="this.onerror=null;this.src='https://placehold.co/180x120/050505/f1eeb?text=Error';">`).join('')}
+                            </div>
+                            <a href="${project.url}" target="_blank" rel="noopener noreferrer" class="inline-block bg-accent-action text-white font-bold py-1 px-3 text-sm rounded-md mt-4">Visitar Proyecto</a>
+                        </div>
+                    </div>
+                `;
+                return card;
+            }
+
+            projects.forEach(project => portfolioGrid.appendChild(createPortfolioCard(project)));
+
+            portfolioGrid.addEventListener('click', (e) => {
+                const card = e.target.closest('.portfolio-card');
+                if (!card) return;
+                const isClosing = e.target.closest('.details-close-btn');
+                const isLink = e.target.closest('a');
+                if (isLink) return;
+                if (isClosing) {
+                    card.classList.remove('details-visible');
+                    return;
+                }
+                const currentlyOpen = portfolioGrid.querySelector('.portfolio-card.details-visible');
+                if (currentlyOpen && currentlyOpen !== card) {
+                    currentlyOpen.classList.remove('details-visible');
+                }
+                card.classList.toggle('details-visible');
+            });
+            
+            const langSwitcher = document.getElementById('lang-switcher');
+            // FIX: Removed duplicate declaration of currentLang. It's already declared at the top of the DOMContentLoaded scope.
+            function translatePage(lang) {
+                document.querySelectorAll('[data-lang-key]').forEach(el => {
+                    const key = el.dataset.langKey;
+                    const translation = translations[lang]?.[key];
+                    if (translation) {
+                        if (el.classList.contains('deal-banner')) {
+                             el.setAttribute('data-text', translation);
+                        } else {
+                             el.innerHTML = translation;
+                        }
+                    }
+                });
+                document.documentElement.lang = lang;
+            }
+
+            langSwitcher.addEventListener('click', () => {
+                currentLang = currentLang === 'es' ? 'en' : 'es';
+                langSwitcher.textContent = currentLang === 'es' ? 'EN' : 'ES';
+                translatePage(currentLang);
+            });
+
+            camera.position.set(sectionPositions.hero.cam.x, sectionPositions.hero.cam.y, sectionPositions.hero.cam.z);
+            controls.target.set(sectionPositions.hero.target.x, sectionPositions.hero.target.y, sectionPositions.hero.target.z);
+            
+            window.onload = () => {
+                document.getElementById('preloader').classList.add('loaded');
+                animate();
+            };
+        });
+    </script>
+</body>
+</html>
