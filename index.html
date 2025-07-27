@@ -66,6 +66,15 @@
             cursor: grab;
         }
         #webgl-canvas:active { cursor: grabbing; }
+        
+        #transition-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: var(--bg-dark);
+            z-index: 20;
+            opacity: 0;
+            pointer-events: none;
+        }
 
         .content-section {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -100,6 +109,104 @@
             background-color: var(--accent-primary); border-radius: 2px;
         }
 
+        .glass-panel {
+            background-color: rgba(10, 10, 10, 0.4);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+        
+        .glass-panel-faded {
+            background-color: rgba(10, 10, 10, 0.75);
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
+            border-radius: 0.75rem;
+            padding: 1.5rem 1rem;
+            -webkit-mask-image: 
+                linear-gradient(to right, transparent 0%, black 40px, black calc(100% - 40px), transparent 100%),
+                linear-gradient(to bottom, transparent 0%, black 40px, black calc(100% - 40px), transparent 100%);
+            -webkit-mask-composite: source-in;
+            mask-image: 
+                linear-gradient(to right, transparent 0%, black 40px, black calc(100% - 40px), transparent 100%),
+                linear-gradient(to bottom, transparent 0%, black 40px, black calc(100% - 40px), transparent 100%);
+            mask-composite: intersect;
+        }
+
+        @media (min-width: 768px) {
+            .glass-panel {
+                padding: 2rem;
+            }
+            .glass-panel-faded {
+                padding: 2rem 1.5rem;
+            }
+        }
+        
+        /* --- ESTILOS PARA LA NUEVA SECCIÓN "QUIÉN SOY" --- */
+        #about-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            gap: 2rem;
+        }
+        
+        #about-blueprint-controls {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            pointer-events: auto;
+            flex-wrap: wrap;
+        }
+        .blueprint-btn {
+            font-family: 'Roboto Mono', monospace;
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            color: #a0aec0; /* slate-400 */
+            transition: all 0.3s ease;
+        }
+        .blueprint-btn:hover {
+            color: white;
+            background-color: rgba(181, 204, 106, 0.1);
+        }
+        .blueprint-btn.active {
+            color: var(--bg-dark);
+            background-color: var(--accent-primary);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px var(--accent-primary);
+        }
+        
+        #about-content-display {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            pointer-events: auto;
+            min-height: 200px; /* Espacio reservado para evitar saltos */
+        }
+        .about-content-inner {
+            max-height: 40vh;
+            overflow-y: auto;
+            padding-right: 1rem;
+        }
+        .about-content-inner::-webkit-scrollbar { display: none; }
+        .about-content-inner { scrollbar-width: none; }
+        
+        .skill-category {
+            margin-bottom: 1.5rem;
+        }
+        .skill-item {
+            background-color: rgba(181, 204, 106, 0.1);
+            border: 1px solid var(--border-color);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.875rem;
+        }
+
+
         .portfolio-card {
             position: relative; aspect-ratio: 4 / 5; border-radius: 0.5rem;
             overflow: hidden; cursor: pointer; border: 1px solid var(--border-color);
@@ -130,7 +237,7 @@
             width: 32px; height: 32px; background: rgba(255,255,255,0.1);
             border-radius: 50%; display: flex; justify-content: center; align-items: center;
             color: white; transition: background-color 0.2s, transform 0.2s;
-            z-index: 5; /* Asegura que esté por encima de otros elementos */
+            z-index: 5; 
         }
         .details-close-btn:hover { background-color: var(--accent-action); transform: scale(1.1); }
 
@@ -187,6 +294,7 @@
     </div>
 
     <canvas id="webgl-canvas"></canvas>
+    <div id="transition-overlay"></div>
 
     <header>
         <div class="container mx-auto px-4 sm:px-8 py-4 flex justify-between items-center">
@@ -228,28 +336,37 @@
     </div>
     
     <div id="content-container">
-        <!-- El contenido de las secciones (hero, quienes-somos, etc.) no cambia -->
         <div id="hero" class="content-section visible">
             <div class="content-wrapper text-center text-white max-w-4xl w-full">
-                <h1 class="text-4xl md:text-5xl font-display leading-tight text-shadow" data-lang-key="hero_title">Edifico tu <span class="text-accent-primary">Futuro Digital</span></h1>
-                <p class="text-slate-300 mt-4 max-w-xl mx-auto text-shadow" data-lang-key="hero_subtitle">Más que un desarrollador, un arquitecto. Construyo los cimientos de tu éxito en el universo digital.</p>
+                <div class="glass-panel-faded">
+                    <h1 class="text-4xl md:text-5xl font-display leading-tight text-shadow" data-lang-key="hero_title">Edifico tu <span class="text-accent-primary">Futuro Digital</span></h1>
+                    <p class="text-slate-300 mt-4 max-w-xl mx-auto text-shadow" data-lang-key="hero_subtitle">Más que un desarrollador, un arquitecto. Construyo los cimientos de tu éxito en el universo digital.</p>
+                </div>
             </div>
         </div>
 
+        <!-- SECCIÓN "QUIÉN SOY" COMPLETAMENTE REDISEÑADA -->
         <div id="quienes-somos" class="content-section">
-            <div class="content-wrapper max-w-3xl w-full text-center">
-                <h2 class="section-title relative text-4xl md:text-5xl font-display mb-12 text-shadow" data-lang-key="about_title">El <span class="text-accent-primary">Arquitecto</span> Digital</h2>
-                <div class="text-lg text-slate-300 space-y-6 text-left leading-relaxed text-shadow">
-                    <p data-lang-key="about_p1">Mi nombre es Luis. APPEX no es una corporación sin rostro; es el estandarte de mi filosofía personal. Como Arquitecto Digital, mi único propósito es llevar tu proyecto a su <span class="font-bold text-accent-primary">Appex</span>: el punto más alto de su potencial.</p>
-                    <p data-lang-key="about_p2">No entrego simples páginas web; construyo motores de crecimiento. Mi trabajo es traducir tu visión de negocio en una estructura digital sólida que atraiga, convenza y convierta. Analizo tu mercado, entiendo a tu cliente y edifico una presencia online que no solo se ve increíble, sino que funciona como una herramienta de ventas 24/7, dándote la visibilidad y la autoridad que necesitas para dominar tu sector.</p>
+            <div class="content-wrapper max-w-7xl w-full h-full">
+                <div id="about-container">
+                    <div id="about-3d-canvas"></div>
+                    <div id="about-blueprint-controls">
+                        <button class="blueprint-btn" data-node="mision" data-lang-key="about_mission_title">Misión</button>
+                        <button class="blueprint-btn" data-node="vision" data-lang-key="about_vision_title">Visión</button>
+                        <button class="blueprint-btn" data-node="pilares" data-lang-key="about_pillars_title">Pilares</button>
+                        <button class="blueprint-btn" data-node="experiencia" data-lang-key="about_tab_experience">Arsenal</button>
+                    </div>
+                    <div id="about-content-display" class="glass-panel-faded">
+                        <!-- El contenido se inyectará aquí con JS -->
+                    </div>
                 </div>
             </div>
         </div>
         
         <div id="metodologia" class="content-section">
              <div class="content-wrapper max-w-4xl w-full">
-                <h2 class="section-title relative text-4xl md:text-5xl font-display mb-20 text-center text-shadow" data-lang-key="method_title">Mi Arquitectura de <span class="text-accent-primary">Trabajo</span></h2>
-                <div class="space-y-8 text-shadow">
+                <h2 class="section-title relative text-4xl md:text-5xl font-display mb-8 text-center text-shadow" data-lang-key="method_title">Mi Arquitectura de <span class="text-accent-primary">Trabajo</span></h2>
+                <div class="glass-panel-faded space-y-8 text-shadow">
                     <div class="border-l-4 border-accent-primary pl-6">
                         <h3 class="text-2xl font-display mb-2" data-lang-key="method_s1_title">01. Cimentación: Diagnóstico Estratégico</h3>
                         <p class="text-slate-400 font-light" data-lang-key="method_s1_text">Todo gran edificio necesita cimientos sólidos. Aquí, excavo profundo para entender el terreno de tu negocio, tus metas y los obstáculos. Es una inmersión total para definir la estructura fundamental de tu éxito, identificando oportunidades clave y riesgos potenciales antes de escribir una sola línea de código.</p>
@@ -280,9 +397,9 @@
 
         <div id="servicios" class="content-section">
              <div class="content-wrapper w-full max-w-6xl text-center">
-                <h2 class="section-title relative text-4xl md:text-5xl font-display mb-20 text-shadow" data-lang-key="services_title">Mis Planes de <span class="text-accent-primary">Servicio</span></h2>
+                <h2 class="section-title relative text-4xl md:text-5xl font-display mb-12 text-shadow" data-lang-key="services_title">Mis Planes de <span class="text-accent-primary">Servicio</span></h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-                    <div class="relative border border-accent-primary p-6 rounded-lg bg-accent-secondary transform md:scale-105 highlight-deal overflow-hidden">
+                    <div class="relative glass-panel border-accent-primary transform md:scale-105 highlight-deal overflow-hidden">
                          <div class="deal-banner" data-text="OFERTA" data-lang-key="offer_badge"></div>
                         <h3 class="text-xl font-display text-accent-primary text-shadow" data-lang-key="services_p1_title">Paquete Esencial</h3>
                         <p class="text-3xl font-mono font-bold my-2 text-shadow">$250 <span class="text-lg text-slate-400 line-through">$400</span></p>
@@ -294,7 +411,7 @@
                             <li class="text-accent-primary font-bold" data-lang-key="services_p1_f4">✓ REGALO: Página de Redes Sociales con QR</li>
                         </ul>
                     </div>
-                    <div class="border border-border-color p-6 rounded-lg bg-black/20">
+                    <div class="glass-panel">
                         <h3 class="text-xl font-display text-accent-primary text-shadow" data-lang-key="services_p2_title">Paquete Profesional</h3>
                         <p class="text-3xl font-mono font-bold my-2 text-shadow">$700</p>
                         <p class="text-slate-300 font-light mt-4 text-shadow text-sm" data-lang-key="services_p2_desc">La estructura completa para negocios que buscan consolidar su territorio y establecerse como autoridad.</p>
@@ -305,7 +422,7 @@
                             <li data-lang-key="services_p2_f4">✓ Optimización SEO fundamental</li>
                         </ul>
                     </div>
-                    <div class="border border-border-color p-6 rounded-lg bg-black/20">
+                    <div class="glass-panel">
                         <h3 class="text-xl font-display text-accent-primary text-shadow" data-lang-key="services_p3_title">Paquete Empresarial</h3>
                         <p class="text-3xl font-mono font-bold my-2 text-shadow">$1,200+</p>
                         <p class="text-slate-300 font-light mt-4 text-shadow text-sm" data-lang-key="services_p3_desc">Para visiones audaces que requieren herramientas a la medida, e-commerce o funcionalidades complejas.</p>
@@ -322,8 +439,8 @@
 
         <div id="plan-tranquilidad" class="content-section">
             <div class="content-wrapper max-w-3xl w-full text-center">
-                <h2 class="section-title relative text-4xl md:text-5xl font-display mb-12 text-shadow" data-lang-key="plan_title">Mi Plan de <span class="text-accent-primary">Tranquilidad</span></h2>
-                <div class="text-lg text-slate-300 space-y-6 text-left leading-relaxed bg-black/20 p-8 rounded-lg border border-border-color text-shadow">
+                <h2 class="section-title relative text-4xl md:text-5xl font-display mb-8 text-shadow" data-lang-key="plan_title">Mi Plan de <span class="text-accent-primary">Tranquilidad</span></h2>
+                <div class="glass-panel-faded text-lg text-slate-300 space-y-6 text-left leading-relaxed">
                     <p data-lang-key="plan_p1">Lanzar tu proyecto es solo el primer paso. Asegurar su valor a largo plazo requiere vigilancia. Mi <span class="font-bold text-accent-primary">Plan de Tranquilidad</span> es el equipo de mantenimiento de élite para tu fortaleza digital, asegurando que tu inversión no solo perdure, sino que prospere.</p>
                     <ul class="list-disc list-inside space-y-4 mt-6">
                         <li data-lang-key="plan_f1"><strong class="text-white">Cimientos Inquebrantables:</strong> Tu web residirá en un hosting de alta velocidad con certificado SSL. Traducido: será rápida, segura y amada por Google y tus clientes.</li>
@@ -338,14 +455,16 @@
 
         <div id="contacto" class="content-section">
             <div class="content-wrapper text-center max-w-4xl w-full">
-                <h2 class="text-4xl md:text-5xl font-display mb-6 text-white text-shadow" data-lang-key="contact_title">Contacta al <span class="text-accent-primary">Arquitecto</span></h2>
-                <p class="text-lg text-slate-300 mb-12 text-shadow" data-lang-key="contact_subtitle">Tu visión merece una estructura sólida. Comencemos a diseñar la arquitectura de tu éxito.</p>
-                <div class="flex justify-center items-center gap-4 flex-wrap">
-                    <a href="https://wa.me/50670866080" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.433-9.89-9.889-9.89-5.452 0-9.887 4.434-9.889 9.888.001 2.228.651 4.39 1.899 6.27l-1.232 4.495 4.61-1.212z"/></svg></a>
-                    <a href="mailto:appex@gmail.com" aria-label="Contactar por Email" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
-                    <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Ver perfil de Instagram" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.585-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.585-.012-4.85-.07c-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.85s.012-3.584.07-4.85c.149-3.227 1.664-4.771 4.919-4.919C8.415 2.175 8.796 2.163 12 2.163m0-2.163C8.74 0 8.333.011 7.053.069 2.59.284 0 2.59 0 7.053c-.058 1.281-.069 1.688-.069 4.947s.011 3.666.069 4.947c.216 4.462 2.523 6.78 7.053 6.994 1.28.058 1.688.069 4.947.069s3.667-.011 4.947-.069c4.532-.213 6.84-2.533 7.054-6.994.058-1.281.069-1.688.069-4.947s-.011-3.666-.069-4.947C21.409 2.59 19.093.284 14.947.069 13.667.011 13.26 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.88 1.44 1.44 0 000-2.88z"/></svg></a>
-                    <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Ver perfil de Facebook" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M22.675 0h-21.35C.59 0 0 .59 0 1.325v21.351C0 23.41.59 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.735 0 1.325-.59 1.325-1.325V1.325C24 .59 23.41 0 22.675 0z"/></svg></a>
-                    <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Ver perfil de Github" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12z"/></svg></a>
+                <div class="glass-panel-faded">
+                    <h2 class="text-4xl md:text-5xl font-display mb-6 text-white text-shadow" data-lang-key="contact_title">Contacta al <span class="text-accent-primary">Arquitecto</span></h2>
+                    <p class="text-lg text-slate-300 mb-12 text-shadow" data-lang-key="contact_subtitle">Tu visión merece una estructura sólida. Comencemos a diseñar la arquitectura de tu éxito.</p>
+                    <div class="flex justify-center items-center gap-4 flex-wrap">
+                        <a href="https://wa.me/50670866080" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.433-9.89-9.889-9.89-5.452 0-9.887 4.434-9.889 9.888.001 2.228.651 4.39 1.899 6.27l-1.232 4.495 4.61-1.212z"/></svg></a>
+                        <a href="mailto:appex@gmail.com" aria-label="Contactar por Email" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
+                        <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Ver perfil de Instagram" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.585-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.585-.012-4.85-.07c-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.85s.012-3.584.07-4.85c.149-3.227 1.664-4.771 4.919-4.919C8.415 2.175 8.796 2.163 12 2.163m0-2.163C8.74 0 8.333.011 7.053.069 2.59.284 0 2.59 0 7.053c-.058 1.281-.069 1.688-.069 4.947s.011 3.666.069 4.947c.216 4.462 2.523 6.78 7.053 6.994 1.28.058 1.688.069 4.947.069s3.667-.011 4.947-.069c4.532-.213 6.84-2.533 7.054-6.994.058-1.281.069-1.688.069-4.947s-.011-3.666-.069-4.947C21.409 2.59 19.093.284 14.947.069 13.667.011 13.26 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.88 1.44 1.44 0 000-2.88z"/></svg></a>
+                        <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Ver perfil de Facebook" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M22.675 0h-21.35C.59 0 0 .59 0 1.325v21.351C0 23.41.59 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.735 0 1.325-.59 1.325-1.325V1.325C24 .59 23.41 0 22.675 0z"/></svg></a>
+                        <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Ver perfil de Github" class="p-3 bg-white/10 rounded-full hover:bg-accent-primary transition-colors"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12z"/></svg></a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -365,24 +484,72 @@
         import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
         import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+        import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
-        // Módulo de traducción (sin cambios)
+        // --- Contenido de Traducciones (sin cambios) ---
         const translations = {
             es: {
                 nav_about: 'Quién Soy', nav_method: 'Metodología', nav_portfolio: 'Portafolio', nav_services: 'Servicios', nav_plan: 'Plan de Tranquilidad', nav_contact: 'Contactar',
                 hero_title: 'Edifico tu <span class="text-accent-primary">Futuro Digital</span>', hero_subtitle: 'Más que un desarrollador, un arquitecto. Construyo los cimientos de tu éxito en el universo digital.',
                 about_title: 'El <span class="text-accent-primary">Arquitecto</span> Digital',
-                about_p1: 'Mi nombre es Luis. APPEX no es una corporación sin rostro; es el estandarte de mi filosofía personal. Como Arquitecto Digital, mi único propósito es llevar tu proyecto a su <span class="font-bold text-accent-primary">Appex</span>: el punto más alto de su potencial.',
-                about_p2: 'No entrego simples páginas web; construyo motores de crecimiento. Mi trabajo es traducir tu visión de negocio en una estructura digital sólida que atraiga, convenza y convierta. Analizo tu mercado, entiendo a tu cliente y edifico una presencia online que no solo se ve increíble, sino que funciona como una herramienta de ventas 24/7, dándote la visibilidad y la autoridad que necesitas para dominar tu sector.',
+                about_mission_title: 'Misión', about_vision_title: 'Visión', about_pillars_title: 'Pilares', about_tab_experience: 'Arsenal',
+                method_title: 'Mi Arquitectura de <span class="text-accent-primary">Trabajo</span>',
+                method_s1_title: '01. Cimentación: Diagnóstico Estratégico', method_s1_text: 'Todo gran edificio necesita cimientos sólidos. Aquí, excavo profundo para entender el terreno de tu negocio, tus metas y los obstáculos. Es una inmersión total para definir la estructura fundamental de tu éxito, identificando oportunidades clave y riesgos potenciales antes de escribir una sola línea de código.',
+                method_s2_title: '02. Planos Maestros: Diseño y Experiencia', method_s2_text: 'Con los cimientos definidos, diseño los planos. No se trata solo de estética, sino de la arquitectura de la persuasión. Cada elemento, cada flujo de usuario, está diseñado para guiar a tus visitantes de forma intuitiva hacia la conversión, creando una experiencia memorable y efectiva.',
+                method_s3_title: '03. Edificación Digital: Construcción y Código', method_s3_text: 'Los planos cobran vida. Con la precisión de un artesano, edifico tu estructura digital. Utilizo tecnologías de vanguardia para garantizar que tu proyecto no solo sea visualmente impresionante, sino también rápido, seguro, escalable y construido para el futuro.',
+                method_s4_title: '04. Puesta en Marcha: Lanzamiento y Optimización', method_s4_text: 'El lanzamiento es solo el comienzo. Monitoreo el rendimiento, analizo los datos y te acompaño para asegurar que tu inversión no solo se mantenga, sino que siga evolucionando, adaptándose y generando valor continuo.',
+                portfolio_title: 'Portafolio de <span class="text-accent-primary">Proyectos</span>',
+                portfolio_desc_1: 'Plataforma de reservas para un tour operador, enfocada en la conversión de turistas internacionales.', portfolio_desc_2: 'Sitio web corporativo que genera confianza y captura prospectos a través de herramientas de valor como calculadoras fiscales.', portfolio_desc_3: 'E-commerce y galería digital para una artesana, diseñado para contar la historia detrás de cada pieza y facilitar ventas a nivel global.',
+                portfolio_visit_btn: 'Visitar Proyecto',
+                services_title: 'Mis Planes de <span class="text-accent-primary">Servicio</span>',
                 offer_badge: 'OFERTA',
+                services_p1_title: 'Paquete Esencial', services_p1_desc: 'La solución perfecta para emprendedores y profesionales que necesitan lanzar una presencia digital de alto impacto, rápido.',
+                services_p1_f1: '✓ Página Única (One-Page) profesional', services_p1_f2: '✓ Diseño enfocado en conversión', services_p1_f3: '✓ Formulario de Contacto y WhatsApp', services_p1_f4: '✓ REGALO: Página de Redes Sociales con QR',
+                services_p2_title: 'Paquete Profesional', services_p2_desc: 'La estructura completa para negocios que buscan consolidar su territorio y establecerse como autoridad.',
+                services_p2_f1: '✓ Sitio web de hasta 5 secciones', services_p2_f2: '✓ Arquitectura de contenido estratégica', services_p2_f3: '✓ Blog para marketing de contenidos', services_p2_f4: '✓ Optimización SEO fundamental',
+                services_p3_title: 'Paquete Empresarial', services_p3_desc: 'Para visiones audaces que requieren herramientas a la medida, e-commerce o funcionalidades complejas.',
+                services_p3_f1: '✓ Todo del Paquete Profesional', services_p3_f2: '✓ Tienda online e integraciones de pago', services_p3_f3: '✓ Sistemas de reservas o calculadoras', services_p3_f4: '✓ Cualquier funcionalidad a medida',
+                plan_title: 'Mi Plan de <span class="text-accent-primary">Tranquilidad</span>',
+                plan_p1: 'Lanzar tu proyecto es solo el primer paso. Asegurar su valor a largo plazo requiere vigilancia. Mi <span class="font-bold text-accent-primary">Plan de Tranquilidad</span> es el equipo de mantenimiento de élite para tu fortaleza digital, asegurando que tu inversión no solo perdure, sino que prospere.',
+                plan_f1: '<strong class="text-white">Cimientos Inquebrantables:</strong> Tu web residirá en un hosting de alta velocidad con certificado SSL. Traducido: será rápida, segura y amada por Google y tus clientes.',
+                plan_f2: '<strong class="text-white">Vigilancia Perimetral 24/7:</strong> Mi sistema monitorea tu sitio día y noche. Cualquier amenaza o intento de intrusión es detectado y neutralizado antes de que se convierta en un problema.',
+                plan_f3: '<strong class="text-white">Refuerzos Estructurales Constantes:</strong> La tecnología avanza. Yo me encargo de que tu sitio esté siempre al día con las últimas actualizaciones de seguridad y rendimiento, sellando cualquier posible grieta.',
+                plan_f4: '<strong class="text-white">Bóveda de Planos de Respaldo:</strong> Realizo copias de seguridad automáticas de toda tu estructura. Si ocurre lo impensable, puedo reconstruir tu presencia digital a su estado perfecto en tiempo récord.',
+                plan_f5: '<strong class="text-white">Línea Directa con el Arquitecto:</strong> Tienes acceso prioritario a mí para consultas y ajustes menores. Sin tickets, sin esperas. Hablas directamente con quien construyó tu proyecto.',
+                contact_title: 'Contacta al <span class="text-accent-primary">Arquitecto</span>',
+                contact_subtitle: 'Tu visión merece una estructura sólida. Comencemos a diseñar la arquitectura de tu éxito.',
             },
             en: {
                 nav_about: 'About Me', nav_method: 'Methodology', nav_portfolio: 'Portfolio', nav_services: 'Services', nav_plan: 'Peace of Mind Plan', nav_contact: 'Contact',
                 hero_title: 'Building Your <span class="text-accent-primary">Digital Future</span>', hero_subtitle: 'More than a developer, an architect. I build the foundations for your success in the digital universe.',
                 about_title: 'The Digital <span class="text-accent-primary">Architect</span>',
-                about_p1: "My name is Luis. APPEX is not a faceless corporation; it's the banner of my personal philosophy. As a Digital Architect, my sole purpose is to take your project to its <span class='font-bold text-accent-primary'>Apex</span>: the highest point of its potential.",
-                about_p2: "I don't deliver simple web pages; I build growth engines. My job is to translate your business vision into a solid digital structure that attracts, convinces, and converts. I analyze your market, understand your customer, and build an online presence that not only looks incredible but also functions as a 24/7 sales tool, giving you the visibility and authority you need to dominate your sector.",
+                about_mission_title: 'Mission', about_vision_title: 'Vision', about_pillars_title: 'Pillars', about_tab_experience: 'Arsenal',
+                method_title: 'My Work <span class="text-accent-primary">Architecture</span>',
+                method_s1_title: '01. Foundation: Strategic Diagnosis', method_s1_text: 'Every great building needs a solid foundation. Here, I dig deep to understand your business terrain, your goals, and your obstacles. It’s a total immersion to define the fundamental structure of your success, identifying key opportunities and potential risks before writing a single line of code.',
+                method_s2_title: '02. Master Plans: Design & Experience', method_s2_text: 'With the foundations defined, I design the blueprints. This is not just about aesthetics, but about the architecture of persuasion. Every element, every user flow, is designed to intuitively guide your visitors towards conversion, creating a memorable and effective experience.',
+                method_s3_title: '03. Digital Construction: Build & Code', method_s3_text: 'The blueprints come to life. With the precision of a craftsman, I build your digital structure. I use cutting-edge technologies to ensure your project is not only visually stunning but also fast, secure, scalable, and built for the future.',
+                method_s4_title: '04. Go-Live: Launch & Optimization', method_s4_text: 'The launch is just the beginning. I monitor performance, analyze data, and support you to ensure your investment not only endures but continues to evolve, adapt, and generate continuous value.',
+                portfolio_title: 'Project <span class="text-accent-primary">Portfolio</span>',
+                portfolio_desc_1: 'Booking platform for a tour operator, focused on converting international tourists.', portfolio_desc_2: 'Corporate website that builds trust and captures leads through value tools like tax calculators.', portfolio_desc_3: 'E-commerce and digital gallery for an artisan, designed to tell the story behind each piece and facilitate global sales.',
+                portfolio_visit_btn: 'Visit Project',
+                services_title: 'My <span class="text-accent-primary">Service</span> Plans',
                 offer_badge: 'OFFER',
+                services_p1_title: 'Essential Package', services_p1_desc: 'The perfect solution for entrepreneurs and professionals who need to launch a high-impact digital presence, fast.',
+                services_p1_f1: '✓ Professional One-Page Website', services_p1_f2: '✓ Conversion-focused design', services_p1_f3: '✓ Contact Form and WhatsApp', services_p1_f4: '✓ GIFT: Social Media Page with QR',
+                services_p2_title: 'Professional Package', services_p2_desc: 'The complete structure for businesses looking to consolidate their territory and establish themselves as an authority.',
+                services_p2_f1: '✓ Up to 5-section website', services_p2_f2: '✓ Strategic content architecture', services_p2_f3: '✓ Blog for content marketing', services_p2_f4: '✓ Fundamental SEO optimization',
+                services_p3_title: 'Enterprise Package', services_p3_desc: 'For bold visions that require custom tools, e-commerce, or complex functionalities.',
+                services_p3_f1: '✓ Everything from the Professional Package', services_p3_f2: '✓ Online store and payment integrations', services_p3_f3: '✓ Booking systems or calculators', services_p3_f4: '✓ Any custom functionality',
+                plan_title: 'My Peace of Mind <span class="text-accent-primary">Plan</span>',
+                plan_p1: "Launching your project is just the first step. Securing its long-term value requires vigilance. My <span class='font-bold text-accent-primary'>Peace of Mind Plan</span> is the elite maintenance crew for your digital fortress, ensuring your investment not only lasts but thrives.",
+                plan_f1: '<strong class="text-white">Unbreakable Foundations:</strong> Your website will be hosted on high-speed hosting with an SSL certificate. In other words: it will be fast, secure, and loved by Google and your customers.',
+                plan_f2: '<strong class="text-white">24/7 Perimeter Surveillance:</strong> My system monitors your site day and night. Any threat or intrusion attempt is detected and neutralized before it becomes a problem.',
+                plan_f3: '<strong class="text-white">Constant Structural Reinforcements:</strong> Technology advances. I ensure your site is always up-to-date with the latest security and performance updates, sealing any potential cracks.',
+                plan_f4: '<strong class="text-white">Backup Blueprint Vault:</strong> I perform automatic backups of your entire structure. If the unthinkable happens, I can rebuild your digital presence to its perfect state in record time.',
+                plan_f5: '<strong class="text-white">Direct Line to the Architect:</strong> You have priority access to me for consultations and minor adjustments. No tickets, no waiting. You speak directly with the one who built your project.',
+                contact_title: 'Contact the <span class="text-accent-primary">Architect</span>',
+                contact_subtitle: 'Your vision deserves a solid structure. Let’s start designing the architecture of your success.',
             }
         };
 
@@ -404,17 +571,30 @@
         controls.enablePan = false;
         controls.minDistance = 10;
         controls.maxDistance = 200;
+        
+        const loadingManager = new THREE.LoadingManager(() => {
+            initializeAppLogic();
+        });
 
-        const textureLoader = new THREE.TextureLoader();
-        const cubeLoader = new THREE.CubeTextureLoader();
-        const cdnUrl = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/cube/MilkyWay/';
-        scene.background = cubeLoader.load([
-            `${cdnUrl}dark-s_px.jpg`, `${cdnUrl}dark-s_nx.jpg`,
-            `${cdnUrl}dark-s_py.jpg`, `${cdnUrl}dark-s_ny.jpg`,
-            `${cdnUrl}dark-s_pz.jpg`, `${cdnUrl}dark-s_nz.jpg`
+        const textureLoader = new THREE.TextureLoader(loadingManager);
+        const cubeLoader = new THREE.CubeTextureLoader(loadingManager);
+        const fontLoader = new FontLoader(loadingManager);
+        
+        const spaceBg = cubeLoader.load([
+            'https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/cube/MilkyWay/dark-s_px.jpg', 'https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/cube/MilkyWay/dark-s_nx.jpg',
+            'https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/cube/MilkyWay/dark-s_py.jpg', 'https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/cube/MilkyWay/dark-s_ny.jpg',
+            'https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/cube/MilkyWay/dark-s_pz.jpg', 'https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/cube/MilkyWay/dark-s_nz.jpg'
+        ]);
+        const asteroidBg = cubeLoader.load([
+            'https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/cube/Storforsen/posx.jpg', 'https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/cube/Storforsen/negx.jpg',
+            'https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/cube/Storforsen/posy.jpg', 'https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/cube/Storforsen/negy.jpg',
+            'https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/cube/Storforsen/posz.jpg', 'https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/textures/cube/Storforsen/negz.jpg'
         ]);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        scene.background = spaceBg;
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
         directionalLight.position.set(10, 20, 10);
         scene.add(directionalLight);
@@ -545,18 +725,18 @@
             composer.setSize(window.innerWidth, window.innerHeight);
         });
         
-        // =============================================
-        //        MÓDULO DE NAVEGACIÓN Y UI
-        // =============================================
-        document.addEventListener('DOMContentLoaded', () => {
+        function initializeAppLogic() {
+            document.getElementById('preloader').classList.add('loaded');
+
             const header = document.querySelector('header');
             let activeSection = 'hero';
             let isNavigating = false;
             let currentLang = 'es';
+            const transitionOverlay = document.getElementById('transition-overlay');
 
             const sectionPositions = {
                 hero: { cam: { x: 0, y: 5, z: 35 }, target: { x: 0, y: 0, z: 0 } },
-                'quienes-somos': { cam: { x: -25, y: 10, z: 30 }, target: { x: -5, y: 0, z: 0 } },
+                'quienes-somos': { cam: { x: 0, y: 0, z: 15 }, target: { x: 0, y: 0, z: 0 } },
                 metodologia: { cam: { x: 25, y: -5, z: 30 }, target: { x: 5, y: 0, z: 0 } },
                 proyectos: { cam: { x: 0, y: 0, z: 18 }, target: { x: 0, y: 0, z: 0 } },
                 servicios: { cam: { x: 15, y: 15, z: 45 }, target: { x: 0, y: 0, z: 0 } },
@@ -564,26 +744,55 @@
                 contacto: { cam: { x: -20, y: -15, z: 40 }, target: { x: 0, y: 0, z: 0 } },
             };
 
-            function switchSection(targetId, onCompleteCallback = () => {}) {
-                if (isNavigating || !targetId) return;
+            function switchSection(targetId) {
+                if (isNavigating || !targetId || targetId === activeSection) return;
                 isNavigating = true;
-                
+
+                const fromAbout = activeSection === 'quienes-somos';
+                const toAbout = targetId === 'quienes-somos';
+                const needsBgTransition = fromAbout !== toAbout;
+
                 const targetPosition = sectionPositions[targetId];
                 if (!targetPosition) { isNavigating = false; return; }
 
                 document.getElementById(activeSection)?.classList.remove('visible');
-                
-                const tl = gsap.timeline({
-                    onComplete: () => {
-                        isNavigating = false;
-                        activeSection = targetId;
-                        document.getElementById(targetId)?.classList.add('visible');
-                        onCompleteCallback();
-                    }
-                });
 
-                tl.to(camera.position, { ...targetPosition.cam, duration: 2.5, ease: 'power3.inOut' });
-                tl.to(controls.target, { ...targetPosition.target, duration: 2.5, ease: 'power3.inOut' }, "<");
+                const onTransitionComplete = () => {
+                    isNavigating = false;
+                    activeSection = targetId;
+                    document.getElementById(targetId)?.classList.add('visible');
+                };
+
+                const moveCamera = (onArrival) => {
+                    gsap.to(camera.position, { ...targetPosition.cam, duration: 1.5, ease: 'power3.inOut' });
+                    gsap.to(controls.target, { ...targetPosition.target, duration: 1.5, ease: 'power3.inOut', onComplete: onArrival }, "<");
+                };
+
+                if (needsBgTransition) {
+                    const tl = gsap.timeline({ onComplete: onTransitionComplete });
+                    const zoomValue = toAbout ? 120 : 50;
+                    
+                    tl.to(camera, { fov: zoomValue, duration: 0.7, ease: 'power2.in', onUpdate: () => camera.updateProjectionMatrix() })
+                      .to(transitionOverlay, { opacity: 1, duration: 0.4, ease: 'power2.inOut' }, "-=0.5")
+                      .call(() => {
+                          if (toAbout) {
+                              scene.background = asteroidBg;
+                              asteroidGroup.visible = false;
+                              geoSphere.visible = false;
+                              gsap.to(ambientLight, { intensity: 0.9, duration: 1 });
+                          } else {
+                              scene.background = spaceBg;
+                              asteroidGroup.visible = true;
+                              geoSphere.visible = true;
+                              gsap.to(ambientLight, { intensity: 0.6, duration: 1 });
+                          }
+                          moveCamera();
+                      })
+                      .to(camera, { fov: 75, duration: 1, ease: 'power2.out', onUpdate: () => camera.updateProjectionMatrix() }, ">")
+                      .to(transitionOverlay, { opacity: 0, duration: 0.4, ease: 'power2.inOut' }, "<");
+                } else {
+                    moveCamera(onTransitionComplete);
+                }
 
                 header.classList.toggle('glass-effect', targetId !== 'hero');
             }
@@ -621,31 +830,21 @@
                 toggleMobileMenu(!isOpen);
             });
 
-            // *** CORRECCIÓN DE NAVEGACIÓN MÓVIL ***
             mobileMenuLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     const targetId = e.currentTarget.dataset.target;
-
-                    // Salir si ya hay una navegación en curso o no hay un objetivo válido
-                    if (isNavigating || !targetId) {
-                        return;
-                    }
-                    
-                    // Iniciar el cierre del menú
+                    if (isNavigating || !targetId) return;
                     toggleMobileMenu(false);
-
-                    // Iniciar el cambio de sección inmediatamente
-                    // La animación de la cámara y el cierre del menú ocurrirán en paralelo
                     switchSection(targetId);
                 });
             });
 
             const portfolioGrid = document.getElementById('portfolio-grid');
             const projects = [
-                { id: 1, name: 'Aventuras La Fortuna', desc: 'Plataforma de reservas para un tour operador, enfocada en la conversión de turistas internacionales.', url: '#', images: Array(8).fill(0).map((_,i) => `https://placehold.co/400x250/0A3832/B5CC6A?text=Imagen+${i+1}`) },
-                { id: 2, name: 'Asesor Financiero CR', desc: 'Sitio web corporativo que genera confianza y captura prospectos a través de herramientas de valor como calculadoras fiscales.', url: '#', images: Array(8).fill(0).map((_,i) => `https://placehold.co/400x250/D6CEC8/050505?text=Imagen+${i+1}`) },
-                { id: 3, name: 'Manos de Sarchí', desc: 'E-commerce y galería digital para una artesana, diseñado para contar la historia detrás de cada pieza y facilitar ventas a nivel global.', url: '#', images: Array(8).fill(0).map((_,i) => `https://placehold.co/400x250/C40F3A/F1EEEB?text=Imagen+${i+1}`) },
+                { id: 1, name: 'Aventuras La Fortuna' },
+                { id: 2, name: 'Asesor Financiero CR' },
+                { id: 3, name: 'Manos de Sarchí' },
             ];
 
             function createPortfolioCard(project) {
@@ -654,7 +853,7 @@
                 const initials = project.name.split(' ').map(n => n[0]).join('');
                 
                 card.innerHTML = `
-                    <img src="${project.images[0]}" class="portfolio-card-bg" alt="Imagen principal del proyecto ${project.name}" onerror="this.onerror=null;this.src='https://placehold.co/400x500/050505/f1eeb?text=Error';">
+                    <img src="https://placehold.co/400x500/${'0A3832'}/${'B5CC6A'}?text=Proyecto+${project.id}" class="portfolio-card-bg" alt="Imagen principal del proyecto ${project.name}" onerror="this.onerror=null;this.src='https://placehold.co/400x500/050505/f1eeb?text=Error';">
                     <div class="portfolio-card-title-container">
                         <h3 class="text-xl font-display text-shadow">${project.name}</h3>
                     </div>
@@ -664,11 +863,11 @@
                         </button>
                         <div class="details-logo">${initials}</div>
                         <div>
-                            <p class="text-sm text-slate-300 text-shadow">${project.desc}</p>
+                            <p class="text-sm text-slate-300 text-shadow" data-lang-key="portfolio_desc_${project.id}"></p>
                             <div class="details-carousel">
-                                ${project.images.map(imgUrl => `<img src="${imgUrl}" class="details-carousel-item" alt="Imagen de galería para ${project.name}" onerror="this.onerror=null;this.src='https://placehold.co/180x120/050505/f1eeb?text=Error';">`).join('')}
+                                ${Array(8).fill(0).map((_,i) => `<img src="https://placehold.co/180x120/050505/f1eeb?text=Img+${i+1}" class="details-carousel-item" alt="Imagen de galería para ${project.name}">`).join('')}
                             </div>
-                            <a href="${project.url}" target="_blank" rel="noopener noreferrer" class="inline-block bg-accent-action text-white font-bold py-1 px-3 text-sm rounded-md mt-4">Visitar Proyecto</a>
+                            <a href="#" target="_blank" rel="noopener noreferrer" class="inline-block bg-accent-action text-white font-bold py-1 px-3 text-sm rounded-md mt-4" data-lang-key="portfolio_visit_btn"></a>
                         </div>
                     </div>
                 `;
@@ -717,15 +916,168 @@
                 translatePage(currentLang);
             });
 
+            const aboutContentData = {
+                mision: `
+                    <div class="about-content-inner">
+                        <h3 class="font-display text-xl text-accent-primary mb-2" data-lang-key="about_mission_title">Misión</h3>
+                        <p class="text-slate-300">Construir soluciones digitales que no solo cumplan objetivos, sino que se conviertan en los cimientos del crecimiento y éxito a largo plazo de mis clientes.</p>
+                    </div>
+                `,
+                vision: `
+                    <div class="about-content-inner">
+                        <h3 class="font-display text-xl text-accent-primary mb-2" data-lang-key="about_vision_title">Visión</h3>
+                        <p class="text-slate-300">Ser el arquitecto digital de referencia para negocios que buscan transformar su presencia online en su activo más valioso y rentable.</p>
+                    </div>
+                `,
+                pilares: `
+                    <div class="about-content-inner">
+                        <h3 class="font-display text-xl text-accent-primary mb-2" data-lang-key="about_pillars_title">Pilares</h3>
+                        <p class="text-slate-300">Estructura, Estrategia y Estética. Cada proyecto se edifica sobre una base técnica sólida, una estrategia de negocio clara y un diseño que cautiva y convierte.</p>
+                    </div>
+                `,
+                experiencia: `
+                    <div class="about-content-inner">
+                        <div class="skill-category">
+                            <h3 class="font-display text-lg text-accent-primary mb-3" data-lang-key="about_skills_strategic_title">Caja de Herramientas Estratégicas</h3>
+                            <div class="flex flex-wrap gap-2 text-sm">
+                                <span class="skill-item">Contaduría Pública</span>
+                                <span class="skill-item">Diseño y Optimización de Procesos</span>
+                                <span class="skill-item">Automatización</span>
+                                <span class="skill-item">Inteligencia Artificial</span>
+                            </div>
+                        </div>
+                        <div class="skill-category">
+                            <h3 class="font-display text-lg text-accent-primary mb-3" data-lang-key="about_skills_tech_title">Caja de Herramientas Técnicas</h3>
+                            <div class="flex flex-wrap gap-2 text-sm">
+                                <span class="skill-item">HTML</span> <span class="skill-item">CSS</span> <span class="skill-item">JavaScript</span>
+                                <span class="skill-item">Bases de Datos</span>
+                                <span class="skill-item">Three.js</span> <span class="skill-item">GSAP</span>
+                            </div>
+                        </div>
+                    </div>
+                `
+            };
+            const blueprintBtns = document.querySelectorAll('.blueprint-btn');
+            const contentDisplay = document.getElementById('about-content-display');
+            let activeBtn = null;
+
+            blueprintBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const nodeName = btn.dataset.node;
+                    
+                    if (activeBtn === btn) {
+                        gsap.to(contentDisplay, { opacity: 0, scale: 0.95, y: 10, duration: 0.3, onComplete: () => {
+                            contentDisplay.style.visibility = 'hidden';
+                        }});
+                        activeBtn.classList.remove('active');
+                        activeBtn = null;
+                        return;
+                    }
+
+                    if (activeBtn) activeBtn.classList.remove('active');
+                    activeBtn = btn;
+                    activeBtn.classList.add('active');
+
+                    gsap.to(contentDisplay, { opacity: 0, scale: 0.95, y: 10, duration: 0.2, onComplete: () => {
+                        contentDisplay.innerHTML = aboutContentData[nodeName];
+                        translatePage(currentLang);
+                        contentDisplay.style.visibility = 'visible';
+                        gsap.to(contentDisplay, { opacity: 1, scale: 1, y: 0, duration: 0.3 });
+                    }});
+                });
+            });
+
+            const initAbout3D = () => {
+                const container = document.getElementById('about-3d-canvas');
+                if (!container) return;
+
+                const scene3D = new THREE.Scene();
+                const camera3D = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+                const renderer3D = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                
+                renderer3D.setSize(container.clientWidth, container.clientHeight);
+                renderer3D.setPixelRatio(window.devicePixelRatio);
+                container.appendChild(renderer3D.domElement);
+
+                const coreGroup = new THREE.Group();
+                scene3D.add(coreGroup);
+
+                const coreGeom = new THREE.IcosahedronGeometry(1.5, 3);
+                const coreMat = new THREE.MeshStandardMaterial({ color: 0xB5CC6A, emissive: 0x0A3832, roughness: 0.2, metalness: 0.8 });
+                const core = new THREE.Mesh(coreGeom, coreMat);
+                coreGroup.add(core);
+
+                const wireGeom = new THREE.IcosahedronGeometry(2.5, 2);
+                const wireMat = new THREE.MeshBasicMaterial({ color: 0xB5CC6A, wireframe: true, transparent: true, opacity: 0.5 });
+                const wireframe = new THREE.Mesh(wireGeom, wireMat);
+                coreGroup.add(wireframe);
+
+                const ring1 = new THREE.TorusGeometry(3.5, 0.02, 16, 100);
+                const ring2 = new THREE.TorusGeometry(4.2, 0.02, 16, 100);
+                const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 });
+                const torus1 = new THREE.Mesh(ring1, ringMat);
+                const torus2 = new THREE.Mesh(ring2, ringMat);
+                torus1.rotation.x = Math.PI / 2;
+                torus2.rotation.x = Math.PI / 2;
+                torus2.rotation.y = Math.PI / 4;
+                coreGroup.add(torus1, torus2);
+
+                const pointLight = new THREE.PointLight(0xffffff, 1.5);
+                pointLight.position.set(5, 5, 5);
+                scene3D.add(pointLight);
+                scene3D.add(new THREE.AmbientLight(0xffffff, 0.3));
+
+                camera3D.position.z = 10;
+
+                let isDragging = false;
+                let previousMousePosition = { x: 0, y: 0 };
+                
+                const onPointerMove = (e) => {
+                    if (!isDragging) return;
+                    const deltaX = e.clientX - previousMousePosition.x;
+                    coreGroup.rotation.y += deltaX * 0.005;
+                    previousMousePosition.x = e.clientX;
+                };
+                const onPointerDown = (e) => {
+                    isDragging = true;
+                    previousMousePosition.x = e.clientX;
+                };
+                const onPointerUp = () => { isDragging = false; };
+
+                container.addEventListener('pointerdown', onPointerDown);
+                window.addEventListener('pointerup', onPointerUp);
+                window.addEventListener('pointermove', onPointerMove);
+
+                function animate3D() {
+                    requestAnimationFrame(animate3D);
+                    if (!isDragging) {
+                        coreGroup.rotation.y += 0.001;
+                        coreGroup.rotation.x += 0.0005;
+                    }
+                    if (activeSection === 'quienes-somos') {
+                        scene.rotation.y += 0.0002;
+                    }
+                    renderer3D.render(scene3D, camera3D);
+                }
+                animate3D();
+
+                window.addEventListener('resize', () => {
+                    camera3D.aspect = container.clientWidth / container.clientHeight;
+                    camera3D.updateProjectionMatrix();
+                    renderer3D.setSize(container.clientWidth, container.clientHeight);
+                });
+            };
+            initAbout3D();
+
+            // Inicialización General
             camera.position.set(sectionPositions.hero.cam.x, sectionPositions.hero.cam.y, sectionPositions.hero.cam.z);
             controls.target.set(sectionPositions.hero.target.x, sectionPositions.hero.target.y, sectionPositions.hero.target.z);
             
-            window.onload = () => {
-                document.getElementById('preloader').classList.add('loaded');
-                animate();
-            };
-        });
+            translatePage(currentLang);
+            animate();
+        }
     </script>
 </body>
 </html>
+
 
